@@ -15,8 +15,12 @@ data_path = project_root / "data" / "raw" / "dynamic_supply_chain_logistics_data
 
 db_host = os.getenv("SQL_SERVER_HOST", "localhost")
 db_port = os.getenv("SQL_SERVER_PORT", "1433")
-db_user = os.getenv("SQL_ADMIN_USER")
+db_user = os.getenv("SQL_ADMIN_USERNAME")
 db_password = os.getenv("SQL_ADMIN_PASSWORD")
+
+print("Host:", db_host)
+print("User:", db_user)
+print("Password loaded:", bool(db_password))
 
 # 1. Load the raw dataset
 print(f"Loading CSV from {data_path}...")
