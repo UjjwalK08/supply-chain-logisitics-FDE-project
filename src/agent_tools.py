@@ -58,6 +58,24 @@ db_port = os.getenv("SQL_SERVER_PORT", "1433")
 db_user = os.getenv("SQL_AGENT_USER", "USR_FDE_RO")
 db_password = os.getenv("SQL_AGENT_PASSWORD")
 
+# One engine for the process, shared by every query_telemetry_db call. An engine is
+# a connection pool; building one per query meant a fresh TCP connect and SQL Server
+# login on every Text-to-SQL call. create_engine is lazy, so this does not connect
+# at import time and a down database does not block startup.
+_telemetry_params = urllib.parse.quote_plus(
+    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+    f"SERVER={db_host},{db_port};"
+    f"DATABASE=master;"
+    f"UID={db_user};"
+    f"PWD={db_password};"
+    f"Encrypt=no;"
+    f"TrustServerCertificate=yes;"
+)
+telemetry_engine = create_engine(
+    f"mssql+pyodbc:///?odbc_connect={_telemetry_params}",
+    pool_pre_ping=True,  # transparently replaces pooled connections the server dropped
+)
+
 if not PINECONE_API_KEY:
     raise ValueError("CRITICAL: Ensure PINECONE_API_KEY is present in your active .env profile.")
 
@@ -99,25 +117,11 @@ def query_telemetry_db(sql_query: str) -> str:
     Risk_Classification, Delay_Probability, Port_Congestion_Level, Route_Risk_Index.
     Always write standard T-SQL queries.
     """
-    connection_string = (
-            f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-            f"SERVER={db_host},{db_port};"
-            f"DATABASE=master;"
-            f"UID={db_user};"
-            f"PWD={db_password};"
-            f"Encrypt=no;"
-            f"TrustServerCertificate=yes;"
-        )
-
-    params = urllib.parse.quote_plus(connection_string)
-    
-    engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
-    
     try:
         if not sql_query.strip().upper().startswith("SELECT"):
             return "SECURITY BLOCK: Only SELECT operations are authorized on this view."
-            
-        with engine.connect() as conn:
+
+        with telemetry_engine.connect() as conn:
             cursor = conn.execute(text(sql_query))
             columns = list(cursor.keys())
             rows = cursor.fetchmany(10)

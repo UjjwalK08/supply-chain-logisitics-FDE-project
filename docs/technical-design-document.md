@@ -205,12 +205,14 @@ Every decision cycle is written to `FDE_VIEWS.AgentAuditLog`:
 | `LogID` | `INT IDENTITY` | Primary key |
 | `Timestamp` | `DATETIME` | Defaults to `GETDATE()` |
 | `SessionID` | `VARCHAR(50)` | Browser thread identifier |
-| `NodeExecuted` | `VARCHAR(50)` | `reasoner`, `tools`, or `reasoner_final` |
-| `ToolName` | `VARCHAR(100)` | Tool invoked, or `LLM Text Synthesis` |
-| `Content` | `NVARCHAR(MAX)` | JSON arguments, raw tool output, or final answer |
+| `NodeExecuted` | `VARCHAR(50)` | `user_input`, `reasoner`, `tools`, or `reasoner_final` |
+| `ToolName` | `VARCHAR(100)` | Tool invoked, `Dispatcher Query`, or `LLM Text Synthesis` |
+| `Content` | `NVARCHAR(MAX)` | The question, JSON arguments, raw tool output, or final answer |
 
-One row is written per tool call, per tool result, and per final synthesis, giving a
-complete replay of how any answer was produced.
+Each turn opens with a `user_input` row holding the dispatcher's question, followed by one
+row per tool call, per tool result, and per final synthesis. The log therefore replays
+both what was asked and how the answer was produced; an answer cannot be audited
+without the question that prompted it.
 
 **Scope of the guarantee:** the log is append-only **with respect to the agent identity** —
 `USR_FDE_RO` holds `INSERT` and nothing else, so the agent cannot alter or erase its own

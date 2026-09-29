@@ -191,6 +191,16 @@ def run_agent_turn(user_input: str, config: dict):
     traces = []
     session_id = config["configurable"]["thread_id"]
 
+    # Record the question first, so every audited turn reads question -> tool calls ->
+    # results -> answer. Logged here rather than by the caller so that a thread-recovery
+    # retry, which runs on a fresh session id, also opens with the question.
+    write_audit_log(
+        session_id=session_id,
+        node_name="user_input",
+        tool_name="Dispatcher Query",
+        content=user_input
+    )
+
     with st.status("Initialising core reasoner node", expanded=True) as status:
         events = fde_agent.stream(
             {"messages": [HumanMessage(content=user_input)]},
@@ -328,10 +338,10 @@ STARTER_PROMPTS = {
 # 7. SIDEBAR
 # ==========================================
 with st.sidebar:
-    st.space("medium")  # drops the whole block below the window chrome
+    st.space("large")  # pushes the title down so it sits with the navigation
     st.markdown("### :material/ac_unit: Cold Chain Control Tower")
     st.caption("Incident intelligence for refrigerated freight")
-    st.space("medium")  # separates the heading from the navigation below it
+    st.space("small")  # tight gap so title and navigation read as one block
 
     app_mode = st.segmented_control(
         "Workspace",

@@ -51,7 +51,8 @@ SELECT TOP 50 LogID,
               LEFT(Content, 200) AS ContentPreview
 FROM   FDE_VIEWS.AgentAuditLog
 ORDER  BY Timestamp DESC;
--- Expect: one row per tool call (NodeExecuted = 'reasoner' / 'tools')
---         plus one 'reasoner_final' row per answer.
+-- Expect, per question: one 'user_input' row holding the question, then one row
+--         per tool call ('reasoner') and result ('tools'), then one
+--         'reasoner_final' row holding the answer.
 -- Empty table after running a query? The INSERT is failing silently -
 -- re-run scripts/setup_audit_log.sql and check the column spelling.
