@@ -1,2 +1,63 @@
 [server]
+# Keeps hot-reload from interrupting an in-flight agent run mid-tool-call.
 fileWatcherType = "none"
+
+# ============================================================================
+# Theme: adapted from Streamlit's bundled "financial-dashboard" template.
+# Replaces the hand-injected CSS this app used to carry.
+# ============================================================================
+[theme]
+base = "dark"
+primaryColor = "#60A5FA"             # Bright blue accent
+backgroundColor = "#0F172A"          # Deep slate
+secondaryBackgroundColor = "#1E293B" # Slightly lighter slate
+codeBackgroundColor = "#1E293B"
+textColor = "#F1F5F9"
+linkColor = "#60A5FA"
+borderColor = "#334155"
+codeTextColor = "#CBD5E1"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "6px"
+buttonRadius = "6px"
+
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+codeFontSize = "13px"
+headingFontSizes = ["40px", "26px", "20px", "17px", "15px", "13px"]
+headingFontWeights = [700, 600, 600, 600, 500, 500]
+linkUnderline = false
+
+# Semantic colors — cold-chain status indicators lean on these.
+greenColor = "#34D399"   # Within SOP
+redColor = "#F87171"     # Cold-chain breach
+yellowColor = "#FBBF24"  # Caution
+orangeColor = "#FB923C"  # Alerts
+blueColor = "#60A5FA"    # Informational
+violetColor = "#A78BFA"
+grayColor = "#94A3B8"
+
+chartCategoricalColors = [
+    "#60A5FA",
+    "#34D399",
+    "#A78BFA",
+    "#F87171",
+    "#FBBF24",
+    "#38BDF8",
+    "#94A3B8",
+    "#FB923C",
+]
+
+dataframeBorderColor = "#334155"
+dataframeHeaderBackgroundColor = "#1E293B"
+
+[theme.sidebar]
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+codeBackgroundColor = "#1E293B"
+textColor = "#F1F5F9"
+borderColor = "#334155"
+primaryColor = "#60A5FA"

@@ -1,0 +1,8 @@
+# Never line-ending-convert these. PDFs can be pure ASCII, so Git's text
+# detection would otherwise rewrite their line endings on checkout and break
+# the byte offsets in the PDF's cross-reference table.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.xlsx  binary

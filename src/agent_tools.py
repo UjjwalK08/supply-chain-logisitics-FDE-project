@@ -1,9 +1,22 @@
 import os
+import sys
 import urllib
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+
+# This module is the first one imported by every entry point (ui.py, orchestrator.py
+# and its own __main__), so the guard belongs here. The status messages below use
+# emoji, which raise UnicodeEncodeError on a non-UTF-8 stdout -- Windows consoles
+# default to cp1252, and redirected pipes and service wrappers often do too. That
+# crashes the whole app at import time over decorative logging, so make stdout
+# tolerant instead.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError, ValueError):
+        pass  # Already fine, or not reconfigurable -- nothing to do.
 
 from langchain_core.tools import tool
 from langchain_openai import OpenAIEmbeddings
