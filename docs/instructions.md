@@ -133,23 +133,22 @@ I'm a new dispatcher on the night shift. Can you quickly explain the difference 
 
 
 ## Phase 4
-Go to VS-code > CTRL + N > 'click on plain-text' and use 'sql'
 
-Select the su user and write below :
+## Audit Log
 
-CREATE TABLE FDE_VIEWS.AgentAuditLog (
-    LogID INT IDENTITY(1,1) PRIMARY KEY,
-    Timestamp DATETIME DEFAULT GETDATE(),
-    SessionID VARCHAR(50),
-    NodeExecuted VARCHAR(50),
-    ToolName VARCHAR(100),
-    Content NVARCHAR(MAX) -- NVARCHAR to safely handle JSON strings and large LLM outputs
-);
+- Open `scripts\setup_audit_log.sql`
+- Connect with the **admin** profile (`legacy-mssql` / sa), not the agent profile
+- Run it (VS-code shows a Start button at the top)
 
--- Grant the agent user permission to write only to this specific table
-```
-GRANT INSERT ON FDE_VIEWS.AgentAuditLog TO USR_FDE_RO;
-```
+This creates `FDE_VIEWS.AgentAuditLog` and grants `USR_FDE_RO` INSERT on that one
+table — the single, narrow write exception to the agent's read-only role.
+
+> The script also drops any older copy of the table that used the misspelled
+> `NodeEexcuted` column. Against that older table every audit INSERT fails, and
+> because `write_audit_log()` in `src\ui.py` only prints the exception, the UI
+> looks healthy while the table stays empty.
+
+Verify with the Phase 4 block in `scripts\verification_queries.sql`.
 
 ## Phase 5
 streamlit run src\ui.py
@@ -159,8 +158,8 @@ streamlit run src\ui.py
 ```
 sudo apt update && sudo apt install -y python3-pip python3-venv git
 cd /home/ubuntu
-git clone https://github.com/nimowhyca/cold-chain-logistics-FDE-Project.git
-cd cold-chain-logistics-FDE-Project
+git clone https://github.com/UjjwalK08/supply-chain-logisitics-FDE-project.git
+cd supply-chain-logisitics-FDE-project
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -193,8 +192,8 @@ After=network.target
 
 [Service]
 User=ubuntu
-WorkingDirectory=/home/ubuntu/cold-chain-logistics-FDE-Project
-ExecStart=/home/ubuntu/cold-chain-logistics-FDE-Project/venv/bin/streamlit run src/ui.py --server.port=8501 --server.address=0.0.0.0
+WorkingDirectory=/home/ubuntu/supply-chain-logisitics-FDE-project
+ExecStart=/home/ubuntu/supply-chain-logisitics-FDE-project/venv/bin/streamlit run src/ui.py --server.port=8501 --server.address=0.0.0.0
 Restart=always
 
 [Install]

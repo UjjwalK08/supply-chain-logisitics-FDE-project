@@ -1,4 +1,14 @@
+# Secrets & environment
 .env
+*.pem
+
+# Python
 __pycache__/
 venv/
 .venv/
+
+# Local scratch notes / pasted credentials — never commit
+pincone text file.txt
+
+# Local screenshots / scratch images
+Screenshot *.jpg

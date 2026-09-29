@@ -63,10 +63,26 @@ fde_tools = [query_telemetry_db, fetch_corridor_conditions, search_compliance_so
 llm_with_tools = llm.bind_tools(fde_tools)
 
 # ==========================================
-# 3. GRAPH ARCHITECTURE ASSEMBLY
+# 3. SYSTEM PROMPT
+# ==========================================
+def load_system_prompt() -> str:
+    """Reads the business-structured system prompt that shapes every final answer."""
+    prompt_path = project_root / "src" / "prompts" / "system_prompt.txt"
+    try:
+        return prompt_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        print(f"⚠️ Could not find {prompt_path} — falling back to a generic prompt.")
+        return "You are a helpful AI assistant."
+
+SYSTEM_PROMPT = SystemMessage(content=load_system_prompt())
+
+# ==========================================
+# 4. GRAPH ARCHITECTURE ASSEMBLY
 # ==========================================
 def reasoning_node(state: AgentState):
-    response = llm_with_tools.invoke(state["messages"])
+    # Prepended at call time rather than stored in state, so every entry point
+    # (CLI and Streamlit) is governed by it and no thread can start un-seeded.
+    response = llm_with_tools.invoke([SYSTEM_PROMPT] + state["messages"])
     return {"messages": [response]}
 
 print("⚙️ Compiling LangGraph FDE Orchestrator...")
@@ -81,28 +97,17 @@ graph_builder.add_edge("tools", "reasoner")
 fde_agent = graph_builder.compile(checkpointer=MemorySaver())
 
 # ==========================================
-# 4. CHAT LOOP TESTING PANEL
+# 5. CHAT LOOP TESTING PANEL
 # ==========================================
 if __name__ == "__main__":
     print("\n" + "="*55)
     print("🚀 FDE Supply Chain Orchestrator State Machine Online")
     print(f"   Configured Execution: [LLM: {AGENT_LLM_SETTING}] -> [Embeddings: {os.getenv('Embeddings_model', 'LOCAL')}]")
     print("="*55 + "\n")
-    
-    # Load the business-structured system prompt from the external file
-    prompt_path = project_root / "src" / "prompts" / "system_prompt.txt"
-    try:
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            system_instructions = f.read()
-    except FileNotFoundError:
-        print(f"Error: Could not find {prompt_path}")
-        system_instructions = "You are a helpful AI assistant." # Basic fallback
 
-    system_prompt = SystemMessage(content=system_instructions)
-    
+    # The system prompt is applied inside reasoning_node, so the thread needs no seeding.
     thread_config = {"configurable": {"thread_id": "production_test_1"}}
-    fde_agent.invoke({"messages": [system_prompt]}, config=thread_config)
-    
+
     while True:
         user_input = input("\nDispatcher > ")
         if user_input.lower() in ['exit', 'quit']:
