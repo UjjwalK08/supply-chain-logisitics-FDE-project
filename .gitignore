@@ -12,3 +12,6 @@ pincone text file.txt
 
 # Local screenshots / scratch images
 Screenshot *.jpg
+
+# Evaluation run outputs (regenerated on every run)
+evals/results/

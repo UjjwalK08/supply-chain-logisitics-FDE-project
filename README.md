@@ -150,8 +150,39 @@ retrieval call and skips the database and weather API entirely:
 Knowing when *not* to call a tool is as important as chaining them correctly.
 
 The UI renders each tool's generated arguments and raw output in expandable panels, so
-the reasoning is inspectable rather than a black box. The **🛡️ Security & Audit Logs**
-tab shows the same trace persisted in SQL.
+the reasoning is inspectable rather than a black box. The **Security & audit**
+workspace shows the same trace persisted in SQL, starting with the question that was asked.
+
+---
+
+## Evaluating the agent
+
+`evals/` is a regression suite of 13 dispatcher questions with rule-based pass criteria,
+so agent quality is measured rather than eyeballed:
+
+```bash
+python evals/run_evals.py                 # full run, prints a scorecard
+python evals/run_evals.py --list          # what each case tests
+python evals/run_evals.py --only sql_breach_count --show-answers
+python evals/run_evals.py --min-pass 0.9  # exit 1 below 90%, for CI
+```
+
+| Category | What it checks |
+|---|---|
+| **multi-hop** | The incident questions chain all three tools and apply the 4.0°C rule |
+| **restraint** | A policy-only question calls *only* SOP retrieval; a weather question never touches the database |
+| **text-to-sql** | Generated SQL has the right shape, and the answer matches counts verified against the database |
+| **grounding** | SOP facts are recited correctly, and the agent admits when the SOP is silent instead of inventing a rule |
+| **security** | Destructive requests produce no write SQL, and raw-table data is never returned |
+
+Checks are deterministic (tool usage, SQL regexes, answer text), so runs are repeatable
+and cost only the agent's own model calls. Each case runs on a fresh thread and writes
+nothing to the audit log. Full per-case results, including every generated query, are
+saved to `evals/results/` (gitignored).
+
+First full run on DeepSeek (`deepseek-v4-flash`): **12/13**, averaging about 7 seconds
+and 2.4 tool calls per question. The one failure was an over-strict test (it rejected a
+valid `GROUP BY` query that returned the correct count); that case passes after the fix.
 
 ---
 
@@ -164,7 +195,12 @@ tab shows the same trace persisted in SQL.
 │   ├── source/          Dataset provenance
 │   └── cache/           MD5 hashes enabling incremental re-indexing
 ├── docs/
-│   └── instructions.md  Full operational runbook, phase by phase
+│   ├── instructions.md               Full operational runbook, phase by phase
+│   ├── technical-design-document.md  Source for the TDD PDF
+│   └── business-presentation.md      Source for the presentation PDF
+├── evals/
+│   ├── cases.py         Test questions and their pass criteria
+│   └── run_evals.py     Runs the cases and prints a scorecard
 ├── scripts/
 │   ├── ingest_legacy_data.py       CSV → deliberately "legacy" MSSQL schema
 │   ├── ingest_sop_pinecone.py      Incremental multi-format document indexer
